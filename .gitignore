@@ -1,0 +1,10 @@
+.idea/
+db_file.db
+
+node_modules/
+
+__pycache__/
+
+.pdf
+
+/react

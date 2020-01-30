@@ -1,0 +1,11 @@
+<!doctype html>
+<title>Hello from Flask</title>
+<table>
+    {% for row in rows %}
+    <tr>
+        {% for elem in row %}
+        <td>{{ elem }}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
