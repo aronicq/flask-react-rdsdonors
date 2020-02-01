@@ -7,7 +7,7 @@ services:
     volumes:
       - "./db_file.db:/code/db_file.db"
 
-  react:
-    build: ./react
-    ports:
-      - "8000:80"
+#  react:
+#    build: ./react
+#    ports:
+#      - "8000:80"
