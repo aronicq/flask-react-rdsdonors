@@ -14,4 +14,4 @@ def load_page(conn):
 
 
     conn.close()
-    return render_template("hello.html", rows=rows)
+    return rows[:100]

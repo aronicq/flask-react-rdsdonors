@@ -1,10 +1,13 @@
-.idea/
+**/.idea/
 db_file.db
 
-node_modules/
+**/node_modules/
 
-__pycache__/
+**/__pycache__/
 
+.pyc
 .pdf
 
-/react
+**/static/
+
+архив/

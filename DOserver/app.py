@@ -71,8 +71,8 @@ def mail():
         result = "Error! cannot create the database connection."
         print(result)
 
-    rds.mailChecker.check(conn)
-    return rds.load_datapage.load_page(conn)
+    # rds.mailChecker.check(conn)
+    return flask.render_template("index.html", rows=rds.load_datapage.load_page(conn))
 
 
 @app.route("/daysLeft")
