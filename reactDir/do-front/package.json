@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "homepage": "/static/react",
+  "proxy": "http://0.0.0.0:5000",
   "dependencies": {
     "@babel/core": "7.8.4",
     "@svgr/webpack": "4.3.3",

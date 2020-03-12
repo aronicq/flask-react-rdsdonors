@@ -15,34 +15,43 @@ function App() {
 
 
 class ListElem extends React.Component {
-    // add State
-  //
-  //   componentDidMount() {
-  //   fetch("https://0.0.0.0/api/getList")
-  //     .then(res => res.json())
-  //     .then(
-  //       (result) => {
-  //         this.setState({
-  //           isLoaded: true,
-  //           items: result.items
-  //         });
-  //       },
-  //       // Note: it's important to handle errors here
-  //       // instead of a catch() block so that we don't swallow
-  //       // exceptions from actual bugs in components.
-  //       (error) => {
-  //         this.setState({
-  //           isLoaded: true,
-  //           error
-  //         });
-  //       }
-  //     )
-  // }
+    componentDidMount() {
+    fetch("/api/getList"
+    )
+      .then(res => res.json())
+      .then(
+        (result) => {
+          this.setState({
+            isLoaded: true,
+            items: result.items
+          });
+        },
+        // Note: it's important to handle errors here
+        // instead of a catch() block so that we don't swallow
+        // exceptions from actual bugs in components.
+        (error) => {
+          this.setState({
+            isLoaded: true,
+            error
+          });
+        }
+      )
+  }
+
+    constructor(props) {
+        super(props);
+        this.state = {
+            items: ["initial element"]
+        }
+    }
+
 
     render() {
         return (
             <div>
-                {exampleElements.map((elem) => <DonationElem name={elem.name} key={elem.toString()} />)}
+                {
+                    this.state.items.map((item, i) => <DonationElem string={item} key={item.id} />)
+                }
             </div>
         );
     }
@@ -50,19 +59,22 @@ class ListElem extends React.Component {
 
 
 class DonationElem extends React.Component {
+
+    // display(list){
+    //     return(
+    //         list.map(t => t).reduce((prev, curr) => [prev, ', ', curr])
+    //     )
+    // }
+
     render(){
         return(
             <div>
-                {this.props.name}
+                {this.props.string}
             </div>
         );
     }
 
 }
 
-
-const exampleElements = [
-    {rows}
-]
 
 export default App;

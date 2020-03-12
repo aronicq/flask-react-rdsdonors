@@ -7,7 +7,11 @@ from flask import Flask
 from dateutil import relativedelta
 import sqlite3
 
+from flask.json import jsonify
+from flask_cors import CORS
+
 app = Flask(__name__)
+CORS(app)
 
 
 def create_connection(db_file):
@@ -57,6 +61,31 @@ def blacklist():
 
 @app.route("/checkMail")
 def mail():
+    result = "ok"
+    sql_create_payments_table = """ CREATE TABLE IF NOT EXISTS payments (
+                                    id integer PRIMARY KEY,
+                                    time_date text NOT NULL, 
+                                    email text,
+                                    city text,
+                                    amount integer
+                                );"""
+    conn = create_connection("db_file.db")
+
+    if conn is not None:
+        create_table(conn, sql_create_payments_table)
+    else:
+        result = "Error! cannot create the database connection."
+
+    try:
+        rds.mailChecker.check(conn)
+    except:
+        result = "internal error after checking"
+
+    return result
+
+
+@app.route("/donations")
+def showDonations():
     sql_create_payments_table = """ CREATE TABLE IF NOT EXISTS payments (
                                     id integer PRIMARY KEY,
                                     time_date text NOT NULL, 
@@ -71,8 +100,31 @@ def mail():
         result = "Error! cannot create the database connection."
         print(result)
 
-    # rds.mailChecker.check(conn)
     return flask.render_template("index.html", rows=rds.load_datapage.load_page(conn))
+
+
+
+
+@app.route("/api/getList")
+def getListOfDonations():
+    sql_create_payments_table = """ CREATE TABLE IF NOT EXISTS payments (
+                                    id integer PRIMARY KEY,
+                                    time_date text NOT NULL, 
+                                    email text,
+                                    city text,
+                                    amount integer
+                                );"""
+
+    conn = create_connection("db_file.db")
+
+    if conn is not None:
+        create_table(conn, sql_create_payments_table)
+    else:
+        result = "Error! cannot create the database connection."
+        print(result)
+
+
+    return jsonify({"items": rds.load_datapage.load_page(conn)})
 
 
 @app.route("/daysLeft")
