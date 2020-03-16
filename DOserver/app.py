@@ -94,13 +94,14 @@ def showDonations():
                                     amount integer
                                 );"""
     conn = create_connection("db_file.db")
+
     if conn is not None:
         create_table(conn, sql_create_payments_table)
     else:
         result = "Error! cannot create the database connection."
         print(result)
-
-    return flask.render_template("index.html", rows=rds.load_datapage.load_page(conn))
+    curs = conn.cursor()
+    return flask.render_template("index.html", rows=rds.load_datapage.load_page(curs))
 
 
 
@@ -123,8 +124,9 @@ def getListOfDonations():
         result = "Error! cannot create the database connection."
         print(result)
 
+    curs = conn.cursor()
 
-    return jsonify({"items": rds.load_datapage.load_page(conn)})
+    return jsonify({"items": rds.load_datapage.load_page(curs)})
 
 
 @app.route("/daysLeft")
