@@ -5,8 +5,9 @@ db_file.db
 
 **/__pycache__/
 
-.pyc
-.pdf
+**/*.pyc
+**/*.pdf
+**/*.json
 
 **/static/
 
