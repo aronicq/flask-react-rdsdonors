@@ -100,6 +100,7 @@ def showDonations():
     else:
         result = "Error! cannot create the database connection."
         print(result)
+
     curs = conn.cursor()
     return flask.render_template("index.html", rows=rds.load_datapage.load_page(curs))
 
