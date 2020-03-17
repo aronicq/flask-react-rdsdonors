@@ -64,7 +64,7 @@ def mail():
     result = "ok"
     sql_create_payments_table = """ CREATE TABLE IF NOT EXISTS payments (
                                     id integer PRIMARY KEY,
-                                    time_date text NOT NULL, 
+                                    time_date text NOT NULL,
                                     email text,
                                     city text,
                                     amount integer
@@ -100,10 +100,8 @@ def showDonations():
     else:
         result = "Error! cannot create the database connection."
         print(result)
-    
-    return flask.render_template("index.html", rows=rds.load_datapage.load_page(conn))
 
-
+    return flask.render_template("index.html", rows=rds.load_datapage.load_page(conn)
 
 
 @app.route("/api/getList")
