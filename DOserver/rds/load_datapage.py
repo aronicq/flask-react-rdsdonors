@@ -3,8 +3,8 @@ from operator import itemgetter
 from flask import render_template
 
 
-def load_page(curs):
-    # curs = conn.cursor()
+def load_page(conn):
+    curs = conn.cursor()
     curs.execute("SELECT * FROM main.payments")
     rows = curs.fetchall()
 
