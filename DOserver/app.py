@@ -101,7 +101,7 @@ def showDonations():
         result = "Error! cannot create the database connection."
         print(result)
 
-    return flask.render_template("index.html", rows=rds.load_datapage.load_page(conn)
+    return flask.render_template("index.html", rows=rds.load_datapage.load_page(conn))
 
 
 @app.route("/api/getList")
