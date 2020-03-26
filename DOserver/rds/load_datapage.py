@@ -10,5 +10,5 @@ def load_page(curs):
 
     rows.sort(key=lambda x: datetime.datetime.strptime(x[1], ' %d.%m.%Y %H:%M:%S'), reverse=True)
 
-    conn.close()
+    # conn.close()
     return rows
