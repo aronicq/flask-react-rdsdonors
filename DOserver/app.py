@@ -109,10 +109,18 @@ def getListOfDonations():
                                     amount integer
                                 );"""
 
+    sql_create_daily_payments_table = """ CREATE TABLE IF NOT EXISTS dailypayments (
+                                        id integer PRIMARY KEY,
+                                        time_date text NOT NULL, 
+                                        times_that_day integer,
+                                        amount integer
+                                    );"""
+
     conn = create_connection("db_file.db")
 
     if conn is not None:
         create_table(conn, sql_create_payments_table)
+        create_table(conn, sql_create_daily_payments_table)
     else:
         result = "Error! cannot create the database connection."
         print(result)
