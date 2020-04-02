@@ -59,6 +59,8 @@ def blacklist():
     return ""
 
 
+donations_per_day = ""
+
 @app.route("/checkMail")
 def mail():
     result = "ok"
@@ -69,15 +71,23 @@ def mail():
                                     city text,
                                     amount integer
                                 );"""
+    sql_create_daily_payments_table = """ CREATE TABLE IF NOT EXISTS dailypayments (
+                                        id integer PRIMARY KEY,
+                                        time_date text NOT NULL, 
+                                        times_that_day integer,
+                                        amount integer
+                                    );"""
     conn = create_connection("db_file.db")
 
     if conn is not None:
         create_table(conn, sql_create_payments_table)
+        create_table(conn, sql_create_daily_payments_table)
     else:
         result = "Error! cannot create the database connection."
 
     try:
-        rds.mailChecker.check(conn)
+        global donations_per_day
+        donations_per_day = rds.mailChecker.check(conn)
     except:
         result = "internal error after checking"
 
@@ -86,22 +96,7 @@ def mail():
 
 @app.route("/donations")
 def showDonations():
-    sql_create_payments_table = """ CREATE TABLE IF NOT EXISTS payments (
-                                    id integer PRIMARY KEY,
-                                    time_date text NOT NULL, 
-                                    email text,
-                                    city text,
-                                    amount integer
-                                );"""
-    conn = create_connection("db_file.db")
-
-    if conn is not None:
-        create_table(conn, sql_create_payments_table)
-    else:
-        result = "Error! cannot create the database connection."
-        print(result)
-
-    return flask.render_template("index.html", rows=rds.load_datapage.load_page(conn))
+    return flask.render_template("index.html")
 
 
 @app.route("/api/getList")
@@ -122,7 +117,11 @@ def getListOfDonations():
         result = "Error! cannot create the database connection."
         print(result)
 
-    return jsonify({"items": rds.load_datapage.load_page(conn)})
+    curs = conn.cursor()
+
+    temp = rds.load_datapage.load_page(curs)
+    return jsonify({"items": temp[0],
+                    "donations_per_day": temp[1]})
 
 
 @app.route("/daysLeft")
