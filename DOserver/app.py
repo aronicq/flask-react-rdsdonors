@@ -66,7 +66,7 @@ def mail():
     result = "ok"
     sql_create_payments_table = """ CREATE TABLE IF NOT EXISTS payments (
                                     id integer PRIMARY KEY,
-                                    time_date text NOT NULL, 
+                                    time_date text NOT NULL,
                                     email text,
                                     city text,
                                     amount integer
