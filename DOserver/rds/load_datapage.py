@@ -2,7 +2,6 @@ import datetime
 
 
 def load_page(curs):
->>>>>>> 4953e297b642b4183a9998eead7198f0ae8a70c1
     curs.execute("SELECT * FROM main.payments")
     rows = curs.fetchall()
 
