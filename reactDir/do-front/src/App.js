@@ -1,5 +1,4 @@
 import React from 'react';
-// import logo from './logo.svg';
 import './App.css';
 
 function App() {
@@ -23,7 +22,8 @@ class ListElem extends React.Component {
         (result) => {
             this.setState({
             isLoaded: true,
-            items: result.items
+            items: result.items,
+            donationsPDay: result.donations_per_day
             });
         },
         // Note: it's important to handle errors here
@@ -41,18 +41,22 @@ class ListElem extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            items: // [[3093, "15.03.2020", "14:43:56", "tchurovtim@gmail.com", "Санкт-Петербург", "200"], [2, "15.03.2020", "14:43:56", "tchurovtim@gmail.com", "Санкт-Петербург", "200"]]
-            [["initial item"]]
+            items: [[3093, "15.03.2020", "14:43:56", "tchurovtim@gmail.com", "Санкт-Петербург", "200"], [2, "15.03.2020", "14:43:56", "tchurovtim@gmail.com", "Санкт-Петербург", "200"]],
+            // [["initial item"]]
+            donationsPDay: {"15.03.2020": {"donations_that_day": 2,
+                                           "sum_that_day": 400}
+            }
         }
     }
 
 
     render() {
+        console.log(this.state.items)
         return (
             <div>
                 <table>
                 {
-                    this.state.items.map((item, i) => <DonationElem string={item} key={item.id} />)
+                    this.state.items.map((item, i) => <DonationElem parentState={this.state} string={item} key={item.id} />)
                 }
                 </table>
             </div>
@@ -67,10 +71,21 @@ class DonationElem extends React.Component {
         return row.map((cell) => <td key={this.props.key + cell.toString()}>{cell}</td>)
     }
 
+
+    displaySpan(row){
+        if(row === this.props.parentState.items.find((i) => i[1] === row[1])){
+            let day_don= this.props.parentState.donationsPDay[row[1]]
+            return <td rowSpan={day_don["donations_that_day"]}>{day_don["sum_that_day"]}</td>;
+        }
+    }
+
+
     render(){
         return(
             <React.Fragment>
-                {<tr key={this.props.key}>{this.displayRow(this.props.string)}</tr>}
+                {<tr key={this.props.key}>{this.displayRow(this.props.string)}
+                    {this.displaySpan(this.props.string)}
+                </tr>}
             </React.Fragment>
         );
     }
