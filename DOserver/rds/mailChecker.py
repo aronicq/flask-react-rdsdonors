@@ -26,6 +26,14 @@ label_id_one = 'Label_6'
 label_id_two = 'UNREAD'
 
 
+def add_daily_payment(conn, payment):
+    sql_add_project = """ INSERT INTO dailypayments (time_date, times_that_day, amount)
+                        VALUES(?, ?, ?)"""
+    cur = conn.cursor()
+    cur.execute(sql_add_project, payment)
+    conn.commit()
+
+
 def add_payment(conn, payment):
     sql_add_project=""" INSERT INTO payments (time_date, email, city, amount)
                     VALUES(?, ?, ?, ?)"""
@@ -52,7 +60,7 @@ def check(conn):
     print("Total messages taken from inbox: ", str(len(mssg_list)))
 
     final_list = []
-
+    donations_per_day = {}
 # going through list of al messages
 
     for mssg in mssg_list:
@@ -175,6 +183,8 @@ def check(conn):
 
         #branch payments acts or returns
         if "Subject" in temp_dict and 'РЕЕСТР ПЛАТЕЖЕЙ В «РазДельный Сбор» www.rsbor.ru' in temp_dict['Subject']:
+
+
             if "РЕЕСТР ПЛАТЕЖЕЙ В «РазДельный Сбор» www.rsbor.ru. № 20" in temp_dict['Subject']:
                 print()
 
@@ -201,11 +211,16 @@ def check(conn):
                 except:
                     return "Санкт-Петербург"
 
+            date_time = 0
+            daily_don = 0
             for i in range(len(lines_of_donations)):
                 tmp, email, sum, tmp, tmp, date_time = lines_of_donations[i][0].split(";")[0:6]
                 print(lines_of_donations[i][0].split(";"))
                 city = define_city(lines_of_donations[i][0].split(";")[comment_field])
                 add_payment(conn, (date_time, email, city, int(sum.split(".")[0])))
+                daily_don += int(sum.split(".")[0])
+
+            add_daily_payment(conn, (date_time, len(lines_of_donations), daily_don))
             # This will mark the message as read
             service.users().messages().modify(userId='me', id=m_id, body={'removeLabelIds': ['UNREAD']}).execute()
 
@@ -229,6 +244,7 @@ def check(conn):
             service.users().messages().modify(userId='me', id=m_id, body={'addLabelIds': [label_id_one]}).execute()
 
     print("Total messaged retrived: ", str(len(final_list)))
+    return donations_per_day
 
 
 if __name__ == '__main__':
