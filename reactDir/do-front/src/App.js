@@ -1,15 +1,81 @@
 import React from 'react';
+import DatePicker from "react-datepicker";
+
+import "react-datepicker/dist/react-datepicker.css";
 import './App.css';
+
 
 function App() {
     return (
         <div className="App">
-            <header className="App-header">
+            {/*<header className="App-header">*/}
             {/*<img src={logo} className="App-logo" alt="logo" />*/}
-                <ListElem />
-            </header>
+                <ArchiveGetter/>
+                <br/>
+                <ListElem/>
+            {/*</header>*/}
         </div>
-    );
+    )
+}
+
+class ArchiveGetter extends React.Component{
+
+    downloadDump = () => {
+          // fake server request, getting the file url as response
+        setTimeout(() => {
+            const fd = this.state.fromDate
+            const td = this.state.toDate
+            const response = {
+                file: "/download?from="+ ("0"+fd.getDate()).slice(-2)+("0"+(fd.getMonth()+1)).slice(-2)+fd.getFullYear() +
+                    "&to="+ ("0"+td.getDate()).slice(-2)+("0"+(td.getMonth()+1)).slice(-2)+td.getFullYear(),
+            };
+            // server sent the url to the file!
+            // now, let's download:
+            window.open(response.file);
+            // you could also do:
+            // window.location.href = response.file;
+        }, 100);
+    }
+
+    state = {
+        fromDate: new Date(),
+        toDate: new Date()
+    };
+
+    handleChange = (id, date) => {
+        if(id === "fromDate"){
+            this.setState({
+                fromDate: date
+            });
+        }
+        if(id === "toDate"){
+            this.setState({
+                toDate: date
+            });
+        }
+    };
+
+    render() {
+        console.log(this.state);
+        return (
+            <div>
+                <DatePicker
+                    dateFormat="dd/MM/yyyy"
+                    selected={this.state.fromDate}
+                    onChange={(date) => this.handleChange("fromDate", date)}
+                />
+                <DatePicker
+                    dateFormat="dd/MM/yyyy"
+                    selected={this.state.toDate}
+                    onChange={(date) => this.handleChange("toDate", date)}
+                />
+                <br/>
+                <button onClick={this.downloadDump}>
+                    click me
+                </button>
+            </div>
+        )
+    }
 }
 
 
@@ -38,6 +104,7 @@ class ListElem extends React.Component {
       )
     }
 
+
     constructor(props) {
         super(props);
         this.state = {
@@ -51,13 +118,15 @@ class ListElem extends React.Component {
 
 
     render() {
-        console.log(this.state.items)
+        // console.log(this.state.items)
         return (
             <div>
                 <table>
+                    <tbody>
                 {
                     this.state.items.map((item, i) => <DonationElem parentState={this.state} string={item} key={item.id} />)
                 }
+                    </tbody>
                 </table>
             </div>
         );
