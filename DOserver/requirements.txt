@@ -5,3 +5,4 @@ BeautifulSoup4
 python-dateutil
 lxml
 flask_cors
+flask_excel
