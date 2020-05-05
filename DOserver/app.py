@@ -3,15 +3,39 @@ import datetime
 import flask
 import rds.mailChecker
 import rds.load_datapage
-from flask import Flask
+from flask import Flask, g, request
 from dateutil import relativedelta
 import sqlite3
 
+import flask_excel
 from flask.json import jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
+flask_excel.init_excel(app)
 CORS(app)
+
+
+@app.route('/download', methods=['GET'])
+def download():
+    from_date = datetime.datetime.strptime(request.args.get('from'), '%d%m%Y')
+    to_date = datetime.datetime.strptime(request.args.get('to'), '%d%m%Y')
+    conn = create_connection("dbfiles/db_file.db")
+    curs = conn.cursor()
+
+    curs.execute("SELECT * FROM main.payments")#3 город,
+    rows = [i for i in curs.fetchall() #if i[3] != "Санкт-Петербург"
+            if from_date < datetime.datetime.strptime(i[1], " %d.%m.%Y %H:%M:%S") < to_date]
+
+    print(str(from_date) + str(to_date))
+    print((str(from_date) + "<" + str(datetime.datetime.strptime(i[1], " %d.%m.%Y %H:%M:%S")) + "<" + str(to_date))
+          for i in curs.fetchall()  # if i[3] != "Санкт-Петербург"
+     if from_date < datetime.datetime.strptime(i[1], " %d.%m.%Y %H:%M:%S") < to_date)
+
+    output = flask_excel.make_response_from_array(rows, "csv")
+    output.headers["Content-Disposition"] = "attachment; filename=export.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
 
 
 def create_connection(db_file):
@@ -20,6 +44,7 @@ def create_connection(db_file):
     :param db_file: database file
     :return: Connection object or None
     """
+
     conn = None
     try:
         conn = sqlite3.connect(db_file)
@@ -43,26 +68,11 @@ def create_table(conn, create_table_sql):
         print(e)
 
 
-@app.route("/react")
-def reacted():
-    return flask.render_template("index.html", token="flask + react")
-
-
-@app.route("/")
-def hello():
-    result = "zdravstvuyte"
-    return result
-
-
-@app.route("/blacklist")
-def blacklist():
-    return ""
-
-
-donations_per_day = ""
-
-@app.route("/checkMail")
-def mail():
+def setting_up_db():
+    """ creating connection to dbfile, tables.
+    Checking correctness
+    :return: Result message and connection object or None
+    """
     result = "ok"
     sql_create_payments_table = """ CREATE TABLE IF NOT EXISTS payments (
                                     id integer PRIMARY KEY,
@@ -77,20 +87,39 @@ def mail():
                                         times_that_day integer,
                                         amount integer
                                     );"""
-    conn = create_connection("db_file.db")
+    conn = None
+
+    try:
+        conn = create_connection("dbfiles/db_file.db")
+    except:
+        result = "error! cannot create db connection"
+        print(result)
 
     if conn is not None:
         create_table(conn, sql_create_payments_table)
         create_table(conn, sql_create_daily_payments_table)
     else:
-        result = "Error! cannot create the database connection."
+        result = "Error! cannot create tables"
+        print(result)
 
-    try:
-        global donations_per_day
-        donations_per_day = rds.mailChecker.check(conn)
-    except:
-        result = "internal error after checking"
+    return result, conn
 
+
+@app.route("/react")
+def reacted():
+    return flask.render_template("index.html", token="flask + react")
+
+
+@app.route("/")
+def hello():
+    result = "zdravstvuyte"
+    return result
+
+
+@app.route("/checkMail")
+def mail():
+    result, conn = setting_up_db()
+    rds.mailChecker.regular_check(conn)
     return result
 
 
@@ -101,30 +130,7 @@ def showDonations():
 
 @app.route("/api/getList")
 def getListOfDonations():
-    sql_create_payments_table = """ CREATE TABLE IF NOT EXISTS payments (
-                                    id integer PRIMARY KEY,
-                                    time_date text NOT NULL, 
-                                    email text,
-                                    city text,
-                                    amount integer
-                                );"""
-
-    sql_create_daily_payments_table = """ CREATE TABLE IF NOT EXISTS dailypayments (
-                                        id integer PRIMARY KEY,
-                                        time_date text NOT NULL, 
-                                        times_that_day integer,
-                                        amount integer
-                                    );"""
-
-    conn = create_connection("db_file.db")
-
-    if conn is not None:
-        create_table(conn, sql_create_payments_table)
-        create_table(conn, sql_create_daily_payments_table)
-    else:
-        result = "Error! cannot create the database connection."
-        print(result)
-
+    result, conn = setting_up_db()
     curs = conn.cursor()
 
     temp = rds.load_datapage.load_page(curs)
@@ -151,4 +157,5 @@ def days():
 
 
 if __name__ == "__main__":
+    flask_excel.init_excel(app)
     app.run(debug=True, host='0.0.0.0', port=5000)

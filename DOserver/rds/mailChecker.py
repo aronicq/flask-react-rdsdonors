@@ -14,7 +14,7 @@ from apiclient import errors
 from httplib2 import Http
 from oauth2client import file, client, tools
 import base64
-import bs4
+import datetime, pytz
 from bs4 import BeautifulSoup
 import dateutil.parser as parser
 
@@ -35,20 +35,53 @@ def add_daily_payment(conn, payment):
 
 
 def add_payment(conn, payment):
-    sql_add_project=""" INSERT INTO payments (time_date, email, city, amount)
+    sql_add_project = """ INSERT INTO payments (time_date, email, city, amount)
                     VALUES(?, ?, ?, ?)"""
     cur = conn.cursor()
     cur.execute(sql_add_project, payment)
     conn.commit()
 
-def check(conn):
-    #use saved token and credentials constructed for our app
+
+def get_credits():
+    # use saved token and credentials constructed for our app
     store = file.Storage(r'token.json')
     creds = store.get()
     if not creds or creds.invalid:
-        flow = client.flow_from_clientsecrets('/home/user/Dropbox/dc-DOserver/DOserver/rds/credentials.json', SCOPES)
+        flow = client.flow_from_clientsecrets('/home/user/Dropbox/flask-react-rdsdonors/DOserver/rds/credentials.json',
+                                              SCOPES)
         creds = tools.run_flow(flow, store)
     service = build('gmail', 'v1', http=creds.authorize(Http()))
+    return service
+
+
+def filter_date_from(msg):
+    result = False
+    msg_date = msg_from = ""
+    for i in msg['payload']['headers']:
+        if i['name'] == "From":
+            msg_from = i['value']
+        if i['name'] == "Date":
+            msg_date = i['value']
+
+    if msg_from == '"Yandex.Money Payment Center" <paymentcenter@yamoney.ru>' and \
+            datetime.datetime.strptime(msg_date, "%a, %d %b %Y %X %z (%Z)") > datetime.datetime(2020, 2, 29).replace(
+        tzinfo=pytz.timezone('Europe/Moscow')):
+        result = True
+
+    return result
+
+
+def force_check():
+    service = get_credits()
+    msgs_ids = service.users().messages().list(userId='me', maxResults=400).execute()['messages']
+    msgs = [service.users().messages().get(userId="me", id=mess['id']).execute() for mess in msgs_ids]
+    yandex_msgs = [msg for msg in msgs if filter_date_from(msg)]
+
+    print()
+
+
+def regular_check(conn):
+    service = get_credits()
 
     # Getting all the unread messages from Inbox
     # labelIds can be changed accordingly
@@ -61,7 +94,7 @@ def check(conn):
 
     final_list = []
     donations_per_day = {}
-# going through list of al messages
+    # going through list of al messages
 
     for mssg in mssg_list:
         temp_dict = {}
@@ -73,7 +106,6 @@ def check(conn):
         msg_subject = ""
         msg_date = ""
         msg_text = ""
-
 
         def get_attachments():
             try:
@@ -110,13 +142,12 @@ def check(conn):
             message.attach(attachedfile)
             return {'raw': base64.urlsafe_b64encode(message.as_bytes()).decode()}
 
-
         for one in headr:
             # getting the Subject
             if one['name'] == 'Subject':
                 msg_subject = one['value']
                 temp_dict['Subject'] = msg_subject
-            #getting date
+            # getting date
             if one['name'] == 'Date':
                 msg_date = one['value']
                 date_parse = (parser.parse(msg_date))
@@ -141,7 +172,7 @@ def check(conn):
             # if part_one['filename'] == "":
             #     part_one = mssg_parts[1]
             # print("-1")
-        # fetching first element of the part
+            # fetching first element of the part
             part_body = part_one['body']  # fetching body of the message
             try:
                 part_data = part_body['data']
@@ -168,7 +199,7 @@ def check(conn):
             # depending on the end user's requirements, it can be further cleaned
             # using regex, beautiful soup, or any other method
             temp_dict['Message_body'] = mssg_body
-            #print(mssg_body)
+            # print(mssg_body)
             msg_text = mssg_body[0].text.lower()
 
         except:
@@ -181,9 +212,8 @@ def check(conn):
         # print(temp_dict)
         final_list.append(temp_dict)  # This will create a dictonary item in the final list
 
-        #branch payments acts or returns
+        # branch payments acts or returns
         if "Subject" in temp_dict and 'РЕЕСТР ПЛАТЕЖЕЙ В «РазДельный Сбор» www.rsbor.ru' in temp_dict['Subject']:
-
 
             if "РЕЕСТР ПЛАТЕЖЕЙ В «РазДельный Сбор» www.rsbor.ru. № 20" in temp_dict['Subject']:
                 print()
@@ -191,19 +221,45 @@ def check(conn):
             # if service.users().messages()
             # service.users().messages().modify(userId='me', id=m_id, body={'addLabelIds': [label_id_one]}).execute()
             # generator which separates email into pieces and returns lines with donate info by symbol "@"
-            lines_of_donations = [[i] for i in soup.contents[0].contents[0].contents[0].contents[0].split("; \r\n") if "@" in i]
-            if len([[i] for i in soup.contents[0].contents[0].contents[0].contents[0].split("\r\n") if "Номер транзакции" in i][0][0].split(";")) == 11:
+            lines_of_donations = [[i] for i in soup.contents[0].contents[0].contents[0].contents[0].split("; \r\n") if
+                                  "@" in i]
+            if len([[i] for i in soup.contents[0].contents[0].contents[0].contents[0].split("\r\n") if
+                    "Номер транзакции" in i][0][0].split(";")) == 11:
                 comment_field = 9
             else:
                 comment_field = 10
 
-
-            #finds city in comments, returns spb by defult and city that list and comment contains
+            # finds city in comments, returns spb by defult and city that list and comment contains
             #  IT LOWERS THE LETTERS
+
             def define_city(str):
-                words = ["хабаровск", "хабаровска", "владивосток", "владивостока",
-                         "череповец", "череповца", "красная поляна", "красной поляны",
-                         "сочи", "сочи", "воронеж", "воронежа", "рсограмота", "грамота"]
+
+                words = ["артёма", "артем",
+                         "артём", "артема",
+                         "белорецк", "белорецка",
+                         "благовещенск", "благовещенска",
+                         "владивосток", "владивостока",
+                         "воронеж", "воронежа",
+                         "краснодар", "краснодара",
+                         "липецк", "липецка",
+                         "сочи", "сочи",
+                         "сургут", "сургута",
+                         "торжок", "торжка",
+                         "хабаровск", "хабаровска",
+                         "череповец", "череповца",
+                         "новгород", "новгорода",
+                         "красная поляна", "красной поляны",
+
+                         "всеволожск", "всеволожска",
+                         "гатчина", "гатчины",
+                         "ивангород", "ивангорода",
+                         "кингисепп", "кингисеппа",
+                         "кириши", "киришей",
+                         "колтуши", "колтушей",
+                         "кудрово", "кудрова",
+                         "сосновый бор", "соснового бора",
+
+                         "рсограмота", "грамота", ]
 
                 try:
                     city = [words.index(i) for i in words if i in str.lower()][0]
@@ -240,7 +296,7 @@ def check(conn):
             service.users().messages().send(userId='me', body=message).execute()
             # This will mark the messagea as read
             service.users().messages().modify(userId='me', id=m_id, body={'removeLabelIds': ['UNREAD']}).execute()
-            #if service.users().messages()
+            # if service.users().messages()
             service.users().messages().modify(userId='me', id=m_id, body={'addLabelIds': [label_id_one]}).execute()
 
     print("Total messaged retrived: ", str(len(final_list)))
@@ -248,5 +304,5 @@ def check(conn):
 
 
 if __name__ == '__main__':
-    conn = sqlite3.connect("db_file.db")
-    check(conn)
+    conn = sqlite3.connect("../dbfiles/db_file.db")
+    regular_check(conn)

@@ -5,7 +5,7 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - "./db_file.db:/code/db_file.db"
+      - "./dbfiles:/code/dbfiles"
 
 #  react:
 #    build: ./react
