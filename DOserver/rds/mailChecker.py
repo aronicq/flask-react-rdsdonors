@@ -103,9 +103,6 @@ def regular_check(conn):
         payld = message['payload']  # get payload of the message
         headr = payld['headers']  # get header of the payload
         msg_from = ""
-        msg_subject = ""
-        msg_date = ""
-        msg_text = ""
 
         def get_attachments():
             try:
@@ -157,7 +154,6 @@ def regular_check(conn):
             if one['name'] == 'From':
                 msg_from = one['value']
                 temp_dict['Sender'] = msg_from
-        # print("gettings")
         # письмо отправлено нами, пропускаем, не нужно нам
         if msg_from == 'Razdelny Sbor <rsbor.ru@gmail.com>': continue
         if "paymentcenter@yamoney.ru" not in msg_from and "shoppay@yamoney.ru" not in msg_from:
@@ -165,13 +161,9 @@ def regular_check(conn):
 
         temp_dict['Snippet'] = message['snippet']  # fetching message snippet
         try:
-            # print("-2")
             # Fetching message body
             mssg_parts = payld['parts']  # fetching the message parts
             part_one = mssg_parts[0]
-            # if part_one['filename'] == "":
-            #     part_one = mssg_parts[1]
-            # print("-1")
             # fetching first element of the part
             part_body = part_one['body']  # fetching body of the message
             try:
@@ -185,21 +177,19 @@ def regular_check(conn):
                 except:
                     pass
 
-            # print("0")
             clean_one = part_data.replace("-", "+")  # decoding from Base64 to UTF-8
             clean_one = clean_one.replace("_", "/")  # decoding from Base64 to UTF-8
-            # print("1")
+
             clean_two = base64.b64decode(bytes(clean_one, 'UTF-8'))  # decoding from Base64 to UTF-8
-            # print("2")
-            # print(bs4.__version__)
+
             soup = BeautifulSoup(clean_two, "lxml")
-            # print("soup")
+
             mssg_body = soup.body()
             # mssg_body is a readible form of message body
             # depending on the end user's requirements, it can be further cleaned
             # using regex, beautiful soup, or any other method
             temp_dict['Message_body'] = mssg_body
-            # print(mssg_body)
+
             msg_text = mssg_body[0].text.lower()
 
         except:
@@ -209,7 +199,7 @@ def regular_check(conn):
             finally:
                 traceback.print_exception(*exc_info)
 
-        # print(temp_dict)
+
         final_list.append(temp_dict)  # This will create a dictonary item in the final list
 
         # branch payments acts or returns
@@ -259,7 +249,9 @@ def regular_check(conn):
                          "кудрово", "кудрова",
                          "сосновый бор", "соснового бора",
 
-                         "рсограмота", "грамота", ]
+                         "рсограмота", "грамота",
+                         
+                         "глушкина", "глушкиной", ]
 
                 try:
                     city = [words.index(i) for i in words if i in str.lower()][0]
