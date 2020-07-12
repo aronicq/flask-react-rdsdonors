@@ -1,3 +1,18 @@
+.DateInput_input{
+  font-size: small;
+}
+.donations-list{
+  float: left;
+}
+
+.dateFilter{
+  display: flex;
+}
+
+.filter{
+  float: right;
+}
+
 .App {
 }
 

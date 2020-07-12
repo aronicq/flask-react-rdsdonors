@@ -148,11 +148,11 @@ def days():
     full_sentence = relativedelta.relativedelta(datetime.datetime.strptime(str('2020-09-24'), '%Y-%m-%d'),
                                                 datetime.datetime.strptime(str('2018-12-24'), '%Y-%m-%d'))
 
-    return "days: " + str(abs((date.today() - date).days)) + " \\ " + str(
+    return "days: " + str(abs((date.today() - date).days)) + "(" + str(abs((date.today() - date).days) - 32) + ")" + " \\ " + str(
         abs((datetime.date(2018, 12, 24) - date).days)) + "</br>" \
-           + "weeks: " + str(abs(date.today() - date).days // 7) + " \\ " + str(
+           + "weeks: " + str(abs(date.today() - date).days // 7) + "(" + str((abs((date.today() - date).days) - 32) // 7) + ")" + " \\ " + str(
         abs((datetime.date(2018, 12, 24) - date).days) // 7) + "</br>" \
-           + "months: " + str(diff.years * 12 + diff.months + round(diff.days / 30, 1)) + " \\ " + str(
+           + "months: " + str(diff.years * 12 + diff.months + round(diff.days / 30, 1)) + "(" + str(diff.years * 12 + diff.months + round((diff.days  - 32) / 30, 1)) + ")" + " \\ " + str(
         full_sentence.years * 12 + full_sentence.months + round(full_sentence.days / 30, 1))
 
 
