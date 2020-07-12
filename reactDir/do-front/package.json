@@ -2,6 +2,7 @@
   "name": "do-front",
   "version": "0.1.0",
   "private": true,
+  "homepage": "/static/react",
   "dependencies": {
     "@babel/core": "7.8.4",
     "@babel/runtime": "^7.10.4",
