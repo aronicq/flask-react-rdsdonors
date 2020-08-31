@@ -1,3 +1,4 @@
+# This Python file uses the following encoding: utf-8
 from __future__ import print_function
 
 import sqlite3
@@ -19,7 +20,7 @@ from bs4 import BeautifulSoup
 import dateutil.parser as parser
 
 # If modifying these scopes, delete the file token.json.
-# разрешаем доступ во все области ко всем действиям в почте(добавления ярлыков, чтение, отправка писем и тд)
+# allowing all activities on this account
 SCOPES = 'https://mail.google.com/'
 
 label_id_one = 'Label_6'
@@ -43,13 +44,16 @@ def add_payment(conn, payment):
 
 
 def get_credits():
-    # use saved token and credentials constructed for our app
-    store = file.Storage(r'token.json')
+    # you need to generate token by hand(run with no token file to step into "if" condition lower) and upload it to the server.
+    # token generating cannot be done on server side!
+    store = file.Storage(r'rds/token.json')
     creds = store.get()
     if not creds or creds.invalid:
-        flow = client.flow_from_clientsecrets('/home/user/Dropbox/flask-react-rdsdonors/DOserver/rds/credentials.json',
+        print("problem with token.json")
+        flow = client.flow_from_clientsecrets('credentials.json',
                                               SCOPES)
         creds = tools.run_flow(flow, store)
+
     service = build('gmail', 'v1', http=creds.authorize(Http()))
     return service
 
@@ -154,7 +158,7 @@ def regular_check(conn):
             if one['name'] == 'From':
                 msg_from = one['value']
                 temp_dict['Sender'] = msg_from
-        # письмо отправлено нами, пропускаем, не нужно нам
+        # skipping letters that we send
         if msg_from == 'Razdelny Sbor <rsbor.ru@gmail.com>': continue
         if "paymentcenter@yamoney.ru" not in msg_from and "shoppay@yamoney.ru" not in msg_from:
             continue
@@ -298,3 +302,4 @@ def regular_check(conn):
 if __name__ == '__main__':
     conn = sqlite3.connect("../dbfiles/db_file.db")
     regular_check(conn)
+    #force_check()

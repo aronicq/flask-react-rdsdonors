@@ -9,4 +9,6 @@ db_file.db
 **/*.pdf
 **/*.json
 
+*.json
+
 архив/
